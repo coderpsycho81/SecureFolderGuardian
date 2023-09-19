@@ -1,2 +1,2 @@
-# SecureFolderGuardian
-Program, seçilen klasörün yolunu alır, bir kopyasını oluşturur ve içeriği Cryptography ile şifreler. Dosyalarınızı şifrelediğinden, içerik kimse tarafından açılamaz. Programı kullanarak şifreyi girerek şifrelenmiş klasörü çözebilirsiniz.
+# Explanation
+This program takes the path of a specified folder, then creates a copy of that folder and encrypts the content of the copied folder using Cryptography. Thanks to this encryption process, no one can access your files because their contents are encrypted. Later, to access your files, you use your program, select the path of the encrypted folder, and enter the password. The program decrypts the folder using the password, making its contents visible. Good uses. By _coderpsycho
