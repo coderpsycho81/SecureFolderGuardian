@@ -1,0 +1,82 @@
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+
+public static class FolderEncryption
+{
+    private static string key = "YourEncryptionKey"; // Þifreleme anahtarý, güvenli bir þekilde saklanmalýdýr.
+
+    public static void EncryptFolder(string folderPath)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            aesAlg.Key = Encoding.UTF8.GetBytes(key);
+            aesAlg.GenerateIV();
+
+            // Klasör adýný þifreleyin ve yeni bir klasör oluþturun
+            string encryptedFolderName = Convert.ToBase64String(aesAlg.IV);
+            string encryptedFolderPath = Path.Combine(Path.GetDirectoryName(folderPath), encryptedFolderName);
+            Directory.CreateDirectory(encryptedFolderPath);
+
+            // Klasör içeriðini þifreleyin
+            foreach (string filePath in Directory.GetFiles(folderPath))
+            {
+                string fileName = Path.GetFileName(filePath);
+                string encryptedFilePath = Path.Combine(encryptedFolderPath, fileName);
+
+                using (FileStream inputStream = new FileStream(filePath, FileMode.Open))
+                using (FileStream outputStream = new FileStream(encryptedFilePath, FileMode.Create))
+                using (ICryptoTransform encryptor = aesAlg.CreateEncryptor())
+                using (CryptoStream cryptoStream = new CryptoStream(outputStream, encryptor, CryptoStreamMode.Write))
+                {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+
+                    while ((bytesRead = inputStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        cryptoStream.Write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void DecryptFolder(string encryptedFolderPath)
+    {
+        using (Aes aesAlg = Aes.Create())
+        {
+            aesAlg.Key = Encoding.UTF8.GetBytes(key);
+
+            // Þifrelenmiþ klasör adýndan IV'yi alýn
+            string encryptedFolderName = Path.GetFileName(encryptedFolderPath);
+            byte[] iv = Convert.FromBase64String(encryptedFolderName);
+            aesAlg.IV = iv;
+
+            // Klasörü çöz
+            string originalFolderPath = Path.Combine(Path.GetDirectoryName(encryptedFolderPath), "DecryptedFolder");
+            Directory.CreateDirectory(originalFolderPath);
+
+            // Klasör içeriðini çöz
+            foreach (string filePath in Directory.GetFiles(encryptedFolderPath))
+            {
+                string fileName = Path.GetFileName(filePath);
+                string originalFilePath = Path.Combine(originalFolderPath, fileName);
+
+                using (FileStream inputStream = new FileStream(filePath, FileMode.Open))
+                using (FileStream outputStream = new FileStream(originalFilePath, FileMode.Create))
+                using (ICryptoTransform decryptor = aesAlg.CreateDecryptor())
+                using (CryptoStream cryptoStream = new CryptoStream(outputStream, decryptor, CryptoStreamMode.Write))
+                {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+
+                    while ((bytesRead = inputStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        cryptoStream.Write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+        }
+    }
+}
